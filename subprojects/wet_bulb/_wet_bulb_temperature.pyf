@@ -12,6 +12,17 @@ python module _wet_bulb_temperature ! in
             integer intent(in) :: max_iter
             real(kind=8) intent(out) :: t_wet
         end subroutine wet_bulb_temperature
+        subroutine wet_bulb_temperature_checked(t_dry, rh, p, tolerance, a, max_iter, ice, t_wet, status)
+            real(kind=8) intent(in) :: t_dry
+            real(kind=8) intent(in) :: rh
+            real(kind=8) intent(in) :: p
+            real(kind=8) intent(in) :: tolerance
+            real(kind=8) intent(in) :: a
+            integer intent(in) :: max_iter
+            integer intent(in) :: ice
+            real(kind=8) intent(out) :: t_wet
+            integer intent(out) :: status
+        end subroutine wet_bulb_temperature_checked
     end interface
 end python module _wet_bulb_temperature
 
