@@ -109,9 +109,19 @@ else
   # https://www.intel.com/content/www/us/en/docs/dpcpp-cpp-compiler/developer-guide-reference/2023-1/use-the-openmp-libraries.html
   fc = meson.get_compiler('fortran')
 
-  omp_flags = ['-qopenmp', '-heap-arrays']
-  # `dirs` is necessary in the Linux
-  omp_dep = fc.find_library('libiomp5', dirs: '/opt/intel/oneapi/compiler/latest/lib', required: true)
+  if fc.get_id() == 'gcc'
+    omp_flags = []
+    omp_dep = dependency('openmp', language: 'fortran', required: true)
+    if host_machine.system() == 'darwin'
+      f2py_omp_args = ['--f2cmap', files('gfortran-darwin.f2cmap')]
+    else
+      f2py_omp_args = ['--f2cmap', files('gfortran.f2cmap')]
+    endif
+  else
+    omp_flags = ['-qopenmp', '-heap-arrays']
+    omp_dep = fc.find_library('libiomp5', dirs: '/opt/intel/oneapi/compiler/latest/lib', required: true)
+    f2py_omp_args = []
+  endif
 
   # Part1: lib
   lib1 = static_library('lib_wrf', ['src/wrf_constants.f90'])
@@ -146,8 +156,8 @@ else
   # https://github.com/numpy/numpy/issues/25199
   wrf_source = custom_target('_wrfmodule.c',
     input : ['_wrf.pyf'],
-    output : ['_wrfmodule.c', '_wrf-f2pywrappers.f'],
-    command : [py, '-m', 'numpy.f2py', '@INPUT@', '--lower', '--build-dir', 'subprojects/wrf']
+    output : ['_wrfmodule.c', '_wrf-f2pywrappers.f', '_wrf-f2pywrappers2.f90'],
+    command : [py, '-m', 'numpy.f2py', '@INPUT@', '--lower', '--build-dir', 'subprojects/wrf'] + f2py_omp_args
   )
 
   py.extension_module('_wrf',

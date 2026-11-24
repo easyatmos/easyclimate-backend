@@ -340,7 +340,7 @@
           avgdt, fac, rho, rhosq, fnyq, varx, varr, winbw, rnow, rprv, &
           alphacrit, faccrit
   integer:: kstart, kstop, krate, kmax, ntime
-  integer, dimension(10) :: idumini
+  integer, parameter :: initial_seed = 206761862
   integer :: i, ncnt, iocheck, nout, idum, rcnt, nseg, ialloc
   integer :: idx80, idx90, idx95, idx99
   integer(kind=8) :: isum
@@ -536,9 +536,8 @@
      allocate(grr(1, nout), stat = ialloc)
      if (ialloc .ne. 0) call allocerr("a")
   end if
-  call random_seed
-  call random_seed(get = idumini(1:10))
-  idum = -abs(idumini(1))
+  ! A negative seed resets both ran1 and the cached Gaussian sample.
+  idum = -initial_seed
   grrsum(:) = 0.0
   grravg(:) = 0.0
   rnsim = real(nsim)
@@ -713,7 +712,7 @@
   write (20,*) '#'
   write (20,*) '# Initial values:'
   write (20,*) '# ---------------'
-  write (20,*) '# idum = ', - abs(idumini(1))
+  write (20,*) '# idum = ', -initial_seed
   write (20,*) '# Data variance (from data spectrum) = ', varx
   write (20,*) '# Avg. dt = ', avgdt
   write (20,*) '#'
@@ -800,12 +799,12 @@
     open(50, file = "tmp_real.output", form = "unformatted", access = "stream")
     if (rhopre .lt. 0.0) then
         write(50) ofac, hifac, &
-                  - abs(idumini(1)), varx, avgdt, &
+                  -initial_seed, varx, avgdt, &
                   rho, tau, dof, winbw(iwin, freq(2)-freq(1), ofac), (1.0-alphacrit) * 100.0, faccrit, &
                   rcritlo(1), rcrithi(1), rcritlo(2), rcrithi(2), rcritlo(3), rcrithi(3)
     else
         write(50) ofac, hifac, &
-                  - abs(idumini(1)), varx, avgdt, &
+                  -initial_seed, varx, avgdt, &
                   rhopre, tau, dof, winbw(iwin, freq(2)-freq(1), ofac), (1.0-alphacrit) * 100.0, faccrit, &
                   rcritlo(1), rcrithi(1), rcritlo(2), rcrithi(2), rcritlo(3), rcrithi(3)
     end if

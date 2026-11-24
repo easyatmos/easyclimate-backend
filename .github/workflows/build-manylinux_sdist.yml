@@ -1,34 +1,41 @@
-name: Build sdist_manylinux_2_28_x86_64 wheels
+name: Build source distribution
 
 on:
   push:
-    branches:
-      - main
-      - dev
+    branches: [main, dev]
   pull_request:
+  workflow_dispatch:
+  workflow_call:
+
+permissions:
+  contents: read
 
 jobs:
-  build-manylinux:
-    runs-on: ubuntu-latest
-
+  build:
+    runs-on: ubuntu-24.04
     steps:
-      - name: Checkout source
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Set up Docker
-        uses: docker/setup-buildx-action@v3
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
 
-      - name: Make scripts executable
+      - name: Install build dependencies
         run: |
-          chmod +x scripts/build_docker_sdist.sh
+          sudo apt-get update
+          sudo apt-get install -y gfortran
+          python -m pip install build meson-python meson ninja numpy==2.2.6
 
-      - name: Build manylinux wheels
-        run: |
-          bash ./scripts/build_docker_sdist.sh
+      - name: Build source distribution
+        env:
+          CC: gcc
+          FC: gfortran
+        run: python -m build --sdist --no-isolation
 
-      - name: Upload wheels
+      - name: Upload source distribution
         uses: actions/upload-artifact@v4
         with:
-          name: manylinux-wheels
+          name: dist-sdist
           path: dist/*.tar.gz
+          if-no-files-found: error
           retention-days: 14

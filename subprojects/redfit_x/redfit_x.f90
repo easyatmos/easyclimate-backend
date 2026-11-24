@@ -278,6 +278,8 @@
              varrx, varry, winbw, alphacritx, alphacrity, faccritx, faccrity,varxy, varrxy, cobias, facphi, z, getz, csig, se_dummy
   integer:: kstart, kstop, krate, kmax, ntime
   integer :: i, i2, ncnt, iocheck, ialloc
+  integer, parameter :: initial_seed = 206761862
+  integer :: idum
   integer :: idx90, idx95, idx99
   logical :: ini, biascorr
   ! character (len = 80) :: cfgfile,fnout  !- shenyulu 2025.1.9
@@ -551,7 +553,7 @@ interface
         if (ialloc .ne. 0) call allocerr("a")
   end if
 !
-  call ranseed
+  idum = -initial_seed
 !
   grxxsum(:) = 0.0
   gryysum(:) = 0.0
@@ -569,8 +571,8 @@ interface
 !   setup AR(1) time series and estimate its spectrum
 !   -------------------------------------------------
 !
-        call makear1(tx, npx, taux, redx)
-        call makear1(ty, npy, tauy, redy)
+        call makear1(tx, npx, taux, idum, redx)
+        call makear1(ty, npy, tauy, idum, redy)
  !
          ini = .false.
             if (mctest .eqv. .true.) then
@@ -866,7 +868,7 @@ interface
              if (ialloc .ne. 0) call allocerr("d")
 !
              do i_boot = 1,nsim
-                call make_coherar1(redxb,redyb) ! 2 red noise time series with known coherency are generated
+                call make_coherar1(idum, redxb, redyb) ! 2 red noise time series with known coherency are generated
                 if (i_boot==1) then
                    ini = .true.
                 else
@@ -2015,7 +2017,7 @@ interface
   end subroutine spectr
 !
 !--------------------------------------------------------------------------
-  subroutine makear1(t, np, tau, red)
+  subroutine makear1(t, np, tau, idum, red)
 !--------------------------------------------------------------------------
   use const
 !
@@ -2024,6 +2026,7 @@ interface
   integer, intent(in)    :: np
   real, dimension(np), intent(in) :: t
   real, intent(in)       :: tau
+  integer, intent(inout) :: idum
   real, dimension(np), intent(out) :: red
 !
   real :: sigma, dt
@@ -2034,17 +2037,17 @@ interface
 ! ------------------------
   if (tau.eq.0.0) then
      do i = 1,np
-        call gasdev(z1)
+        call gasdev(idum, z1)
         red(i) = z1
      end do
    else
-     call gasdev(z1)
+     call gasdev(idum, z1)
      red(1)=z1
      do i = 2, np
         dt = t(i) - t(i-1)
         sigma = 1.0 - exp(-2.0 * dt / tau)
         sigma = sqrt (sigma)
-        call gasdev(z1)
+        call gasdev(idum, z1)
         red(i) = exp(-dt/tau) * red(i-1) + sigma * z1
      end do
   end if
@@ -2052,7 +2055,7 @@ interface
   end subroutine makear1
 !
 !--------------------------------------------------------------------------
-  subroutine make_coherar1(red1, red2)
+  subroutine make_coherar1(idum, red1, red2)
 !--------------------------------------------------------------------------
   use phase
 !
@@ -2060,6 +2063,7 @@ interface
 !
 ! Generates two coupled time series with prescribed coherency
 !
+  integer, intent(inout) :: idum
   real, dimension(np_xy), intent(out) :: red1
   real, dimension(np_xy), intent(out) :: red2
 !
@@ -2072,14 +2076,14 @@ interface
 ! Set up noise x
 ! --------------
   do i = 1,np_xy
-     call gasdev(z1)
+     call gasdev(idum, z1)
      ex(i) = z1
   end do
 !
 ! Set up noise y
 ! --------------
   do i = 1,np_xy
-     call gasdev(z2)
+     call gasdev(idum, z2)
      ey(i) = z2
   end do
 !
@@ -2933,31 +2937,23 @@ interface
   end
 !
 
-!-------------------------------------------------------------------------------------
-subroutine ranseed
-!-------------------------------------------------------------------------------------
-      use nrtype
-      use nr, only: ran
-      implicit none
-!     Seeds random number generator.
-      integer :: seed=0
-      real(sp) :: dummy=-999.0_sp
-      seed=-206761862
-      dummy=ran(seed)
-end subroutine ranseed
-!
 !---------------------------------------------------------------------------------------
-subroutine gasdev(harvest)
+subroutine gasdev(idum, harvest)
 !---------------------------------------------------------------------------------------
       use nrtype
       use nr, only : ran
       implicit none
+      integer, intent(inout) :: idum
       real(sp), intent(out) :: harvest
 !     Gaussian distribution (Numerical Recipes, modified: uses ran).
       real(sp) :: rsq,v1,v2
       real(sp), save :: g
       logical, save :: gaus_stored=.false.
-      integer :: idum=1
+      if (idum < 0) then
+          gaus_stored = .false.
+          ! Seed ran and advance one draw, as in the original seed routine.
+          v1 = ran(idum)
+      end if
       if (gaus_stored) then
           harvest=g
           gaus_stored=.false.
