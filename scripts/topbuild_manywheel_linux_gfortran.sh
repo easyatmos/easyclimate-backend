@@ -39,7 +39,7 @@ mkdir "$build_dir/source"
 cd "$build_dir/source"
 cp -r /source/{LICENSE,README.md,get_version.py,meson.build,pyproject.toml,easyclimate_backend,subprojects} .
 # GNU runtimes are bundled by auditwheel, so omit the Intel-only runtime requirements.
-sed -i -e "/^[[:space:]]*'intel-fortran-rt',/d" -e "/^[[:space:]]*'dpcpp-cpp-rt',/d" pyproject.toml
+sed -i -E "/^[[:space:]]*'(intel-fortran-rt|dpcpp-cpp-rt)(;|')/d" pyproject.toml
 
 export CC=gcc FC=gfortran
 # The bundled Fortran uses legacy argument passing and long free-form lines.

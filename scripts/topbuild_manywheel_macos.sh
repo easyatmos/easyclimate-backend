@@ -56,9 +56,6 @@ export PATH="$build_dir/venv/bin:$PATH"
 mkdir "$build_dir/source"
 cd "$build_dir/source"
 cp -R "$repo_dir"/{LICENSE,README.md,get_version.py,meson.build,pyproject.toml,easyclimate_backend,subprojects} .
-# Delocate bundles the GNU runtimes. Omit Intel-only requirements in the staged source.
-sed -i '' -e "/^[[:space:]]*'intel-fortran-rt',/d" -e "/^[[:space:]]*'dpcpp-cpp-rt',/d" pyproject.toml
-
 python -m pip install --only-binary=:all: \
 	'meson-python==0.17.1' 'meson==1.6.0' 'build==1.2.2.post1' \
 	ninja "numpy==$numpy_version" delocate
