@@ -1,12 +1,12 @@
-<img src="https://github.com/shenyulu/easyclimate-backend/blob/main/docs/source/_static/easyclimate_backend_logo_mini.png?raw=true" alt="easyclimate-backend">
+<img src="https://github.com/easyatmos/easyclimate-backend/blob/main/docs/source/_static/easyclimate_backend_logo_mini.png?raw=true" alt="easyclimate-backend">
 
 <h2 align="center">The backend of easyclimate</h2>
 
 <p align="center">
 <a href="https://easyclimate-backend.readthedocs.io/en/latest/"><strong>Documentation</strong> (latest)</a> •
 <a href="https://easyclimate-backend.readthedocs.io/en/main/"><strong>Documentation</strong> (main branch)</a> •
-<a href="https://shenyulu.github.io/easyclimate-backend/"><strong>Documentation</strong> (Dev)</a> •
-<a href="https://shenyulu.github.io/easyclimate-backend/src/contributing.html"><strong>Contributing</strong></a>
+<a href="https://easyatmos.github.io/easyclimate-backend/"><strong>Documentation</strong> (Dev)</a> •
+<a href="https://easyatmos.github.io/easyclimate-backend/src/contributing.html"><strong>Contributing</strong></a>
 </p>
 
 
@@ -73,7 +73,7 @@ winget install uv
 
 Open the Intel oneAPI command prompt for Intel 64 for Visual Studio 2022 (or higher versions) from the Start menu.
 
-<img src="https://github.com/shenyulu/easyclimate-backend/blob/main/docs/source/_static/fig1.png?raw=true" alt="easyclimate-backend">
+<img src="https://github.com/easyatmos/easyclimate-backend/blob/main/docs/source/_static/fig1.png?raw=true" alt="easyclimate-backend">
 
 At this point, a cmd terminal window will open and the following information will be printed.
 
@@ -119,7 +119,7 @@ cd D:\easyclimate-backend # Replace with your project path
 2. Run the build script on a Linux host in project root:
 
 ```bash
-cd /home/shenyulu/easyclimate-backend # Replace with your project path
+cd /path/to/easyclimate-backend # Replace with your project path
 ./scripts/topbuild_manywheel_linux.sh
 ```
 

@@ -36,11 +36,11 @@ dependencies = [
 dynamic = ["version"]
 
 [project.urls]
-homepage = "https://github.com/shenyulu/easyclimate-backend"
-documentation = "https://github.com/shenyulu/easyclimate-backend"
-source = "https://github.com/shenyulu/easyclimate-backend"
+homepage = "https://github.com/easyatmos/easyclimate-backend"
+documentation = "https://github.com/easyatmos/easyclimate-backend"
+source = "https://github.com/easyatmos/easyclimate-backend"
 download = "https://pypi.org/project/easyclimate-backend/#files"
-tracker = "https://github.com/shenyulu/easyclimate-backend/issues"
+tracker = "https://github.com/easyatmos/easyclimate-backend/issues"
 
 [tool.setuptools.dynamic]
 version = {attr = "easyclimate_backend.__version__"}
