@@ -1,57 +1,33 @@
-# Check Intel Fortran Compiler status
-Write-Host "🔍 Checking Intel Fortran Compiler..." -ForegroundColor Cyan
+param(
+    [ValidateSet('3.10', '3.11', '3.12', '3.13', '3.14', '3.15')]
+    [string[]]$PythonVersions = @('3.10', '3.11', '3.12', '3.13', '3.14', '3.15'),
+    [string]$OutputDirectory = 'dist'
+)
+
+$ErrorActionPreference = 'Stop'
+$PSNativeCommandUseErrorActionPreference = $true
 ifx /QV
 
-$pythonVersions = @("3.10", "3.11", "3.12", "3.13", "3.14")
-
-# 自动获取系统临时目录
-$venvBasePath = Join-Path $env:TEMP "easyclimate-venvs"
-New-Item -ItemType Directory -Force -Path $venvBasePath | Out-Null
-
-Write-Host "📁 Virtual environments will be created in: $venvBasePath" -ForegroundColor Yellow
-Write-Host ""
-
-foreach ($version in $pythonVersions) {
-    Write-Host "🐍 Building wheel for Python $version..." -ForegroundColor Green
-    
-    # 在临时目录创建虚拟环境
-    $venvPath = Join-Path $venvBasePath ".venv-$version"
-    Write-Host "   ⚙️  Creating virtual environment..." -ForegroundColor Gray
-    uv venv $venvPath --python $version --seed
-    
-    # 激活虚拟环境
-    Write-Host "   ✅ Activating virtual environment..." -ForegroundColor Gray
-    & "$venvPath\Scripts\Activate.ps1"
-
-    # 根据 Python 版本选择不同的 requirements 文件
-    if ($version -eq "3.14") {
-        $requirementFile = ".\scripts\build_requirement_3_14_windows.txt"
-        Write-Host "   📦 Installing dependencies from: $requirementFile (Python 3.14 specific)" -ForegroundColor Magenta
-    } else {
-        $requirementFile = ".\scripts\build_requirement_windows.txt"
-        Write-Host "   📦 Installing dependencies from: $requirementFile" -ForegroundColor Gray
+$originalPath = $env:PATH
+foreach ($version in $PythonVersions) {
+    $requirements = switch ($version) {
+        '3.14' { 'build_requirement_3_14_windows.txt' }
+        '3.15' { 'build_requirement_3_15_windows.txt' }
+        default { 'build_requirement_windows.txt' }
     }
-    
-    uv pip install -r $requirementFile
-    
-    # 调用单版本构建脚本
-    Write-Host "   🔨 Building wheel..." -ForegroundColor Gray
-    & .\scripts\build_wheel_windows.ps1
-    
-    # 停用虚拟环境
-    deactivate
-    
-    # 删除该版本的虚拟环境
-    Write-Host "   🧹 Cleaning up virtual environment for Python $version..." -ForegroundColor Gray
-    Remove-Item -Path $venvPath -Recurse -Force -ErrorAction SilentlyContinue
-    
-    Write-Host "   ✨ Completed wheel for Python $version" -ForegroundColor Green
-    Write-Host "   ----------------------------------------" -ForegroundColor DarkGray
-    Write-Host ""
+
+    Write-Host "Building Windows wheel for Python $version"
+    $venv = [System.IO.Directory]::CreateTempSubdirectory('easyclimate-venv-')
+    try {
+        $pythonRequest = if ($version -eq '3.15') { '>=3.15.0,<3.16' } else { $version }
+        uv venv $venv.FullName --python $pythonRequest
+        $venvScripts = Join-Path $venv.FullName 'Scripts'
+        $env:PATH = "$venvScripts;$originalPath"
+        uv pip install --python (Join-Path $venvScripts 'python.exe') -r (Join-Path $PSScriptRoot $requirements)
+        & (Join-Path $PSScriptRoot 'build_wheel_windows.ps1') -OutputDirectory $OutputDirectory
+    }
+    finally {
+        $env:PATH = $originalPath
+        Remove-Item -LiteralPath $venv.FullName -Recurse -Force
+    }
 }
-
-# 清理整个虚拟环境基础目录
-Write-Host "🧹 Cleaning up all virtual environments..." -ForegroundColor Yellow
-Remove-Item -Path $venvBasePath -Recurse -Force -ErrorAction SilentlyContinue
-
-Write-Host "🎉 All builds completed and cleaned up successfully!" -ForegroundColor Green

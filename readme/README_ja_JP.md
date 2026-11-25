@@ -1,12 +1,12 @@
-<img src="https://github.com/shenyulu/easyclimate-backend/blob/main/docs/source/_static/easyclimate_backend_logo_mini.png?raw=true" alt="easyclimate-backend">
+<img src="https://github.com/easyatmos/easyclimate-backend/blob/main/docs/source/_static/easyclimate_backend_logo_mini.png?raw=true" alt="easyclimate-backend">
 
 <h2 align="center">easyclimateのバックエンド</h2>
 
 <p align="center">
 <a href="https://easyclimate-backend.readthedocs.io/en/latest/"><strong>ドキュメント</strong> (最新版)</a> •
 <a href="https://easyclimate-backend.readthedocs.io/en/main/"><strong>ドキュメント</strong> (mainブランチ)</a> •
-<a href="https://shenyulu.github.io/easyclimate-backend/"><strong>ドキュメント</strong> (開発版)</a> •
-<a href="https://shenyulu.github.io/easyclimate-backend/src/contributing.html"><strong>コントリビューション</strong></a>
+<a href="https://easyatmos.github.io/easyclimate-backend/"><strong>ドキュメント</strong> (開発版)</a> •
+<a href="https://easyatmos.github.io/easyclimate-backend/src/contributing.html"><strong>コントリビューション</strong></a>
 </p>
 
 
@@ -67,7 +67,7 @@ winget install uv
 
 スタートメニューから、Intel 64 版 Visual Studio 2022（またはそれ以上のバージョン）の Intel oneAPI コマンド プロンプトを開きます。
 
-<img src="https://github.com/shenyulu/easyclimate-backend/blob/main/docs/source/_static/fig1.png?raw=true" alt="easyclimate-backend">
+<img src="https://github.com/easyatmos/easyclimate-backend/blob/main/docs/source/_static/fig1.png?raw=true" alt="easyclimate-backend">
 
 この時点で、cmd ターミナルウィンドウが開き、以下の情報が表示されます。
 
@@ -113,7 +113,7 @@ cd D:\easyclimate-backend # プロジェクトパスを置き換え
 2. プロジェクトのルートにある Linux ホストでビルドスクリプトを実行：
 
 ```bash
-cd /home/shenyulu/easyclimate-backend
+cd /path/to/easyclimate-backend
 ./scripts/topbuild_manywheel_linux.sh
 ```
 

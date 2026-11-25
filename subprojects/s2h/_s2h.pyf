@@ -1,0 +1,20 @@
+!    -*- f90 -*-
+! Note: the context of this file is case sensitive.
+
+python module _s2h
+    interface
+        subroutine dh2sdrv(dati,dato,hya,hyb,p0,sigi,sigo,intyp,psfc,nlvi,nlvo)
+            integer, optional,intent(in),check(shape(dati, 0) == nlvi),depend(dati) :: nlvi=shape(dati, 0)
+            integer, optional,intent(in),check(shape(hya, 0) == nlvo),depend(hya) :: nlvo=shape(hya, 0)
+            double precision dimension(nlvi),intent(in) :: dati
+            double precision dimension(nlvo),intent(out),depend(nlvo) :: dato
+            double precision dimension(nlvo),intent(in),depend(nlvo) :: hya
+            double precision dimension(nlvo),intent(in),depend(nlvo) :: hyb
+            double precision intent(in) :: p0
+            double precision dimension(nlvi),intent(in),depend(nlvi) :: sigi
+            double precision dimension(nlvo),intent(cache,hide),depend(nlvo) :: sigo
+            integer intent(in) :: intyp
+            double precision intent(in) :: psfc
+        end subroutine dh2sdrv
+    end interface
+end python module _s2h

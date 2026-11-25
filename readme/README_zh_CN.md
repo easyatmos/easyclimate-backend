@@ -1,12 +1,12 @@
-<img src="https://github.com/shenyulu/easyclimate-backend/blob/main/docs/source/_static/easyclimate_backend_logo_mini.png?raw=true" alt="easyclimate-backend">
+<img src="https://github.com/easyatmos/easyclimate-backend/blob/main/docs/source/_static/easyclimate_backend_logo_mini.png?raw=true" alt="easyclimate-backend">
 
 <h2 align="center">easyclimate 后端</h2>
 
 <p align="center">
 <a href="https://easyclimate-backend.readthedocs.io/en/latest/"><strong>文档</strong> (最新版)</a> •
 <a href="https://easyclimate-backend.readthedocs.io/en/main/"><strong>文档</strong> (main分支)</a> •
-<a href="https://shenyulu.github.io/easyclimate-backend/"><strong>文档</strong> (开发版)</a> •
-<a href="https://shenyulu.github.io/easyclimate-backend/src/contributing.html"><strong>贡献指南</strong></a>
+<a href="https://easyatmos.github.io/easyclimate-backend/"><strong>文档</strong> (开发版)</a> •
+<a href="https://easyatmos.github.io/easyclimate-backend/src/contributing.html"><strong>贡献指南</strong></a>
 </p>
 
 
@@ -66,7 +66,7 @@ winget install uv
 
 从开始菜单打开 Intel 64 版 Visual Studio 2022（或更高版本）的 Intel oneAPI 命令提示符。
 
-<img src="https://github.com/shenyulu/easyclimate-backend/blob/main/docs/source/_static/fig1.png?raw=true" alt="easyclimate-backend">
+<img src="https://github.com/easyatmos/easyclimate-backend/blob/main/docs/source/_static/fig1.png?raw=true" alt="easyclimate-backend">
 
 此时，将打开一个 cmd 终端窗口，并打印以下信息。
 
@@ -112,7 +112,7 @@ cd D:\easyclimate-backend # 用您的项目路径替换
 2. 在项目根目录的 Linux 主机上运行构建脚本：
 
 ```bash
-cd /home/shenyulu/easyclimate-backend
+cd /path/to/easyclimate-backend
 ./scripts/topbuild_manywheel_linux.sh
 ```
 

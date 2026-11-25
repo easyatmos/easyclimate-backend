@@ -1,5 +1,10 @@
-$Env:CC="cl"
-$Env:FC="ifx"
-Get-ChildItem -Path . -Recurse -Directory -Filter __pycache__ | Remove-Item -Recurse -Force
-# https://github.com/mesonbuild/meson-python/issues/507
-python -m build --wheel --no-isolation
+param(
+    [string]$OutputDirectory = 'dist'
+)
+
+$ErrorActionPreference = 'Stop'
+$PSNativeCommandUseErrorActionPreference = $true
+$env:CC = 'cl'
+$env:FC = 'ifx'
+
+python -m build --wheel --no-isolation --outdir $OutputDirectory

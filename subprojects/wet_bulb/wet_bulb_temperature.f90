@@ -1,95 +1,86 @@
 subroutine wet_bulb_temperature(T_dry, RH, P, tolerance, A, max_iter, T_wet)
   use, intrinsic :: iso_fortran_env, only: real64
   implicit none
-
-  ! Inputs
-  real(real64), intent(in) :: T_dry
-  real(real64), intent(in) :: RH
-  real(real64), intent(in) :: P
-  real(real64), intent(in) :: tolerance
-  real(real64), intent(in) :: A
-  integer,      intent(in) :: max_iter
-
-  ! Output
+  real(real64), intent(in) :: T_dry, RH, P, tolerance, A
+  integer, intent(in) :: max_iter
   real(real64), intent(out) :: T_wet
+  integer :: status
 
-  ! Locals
-  real(real64) :: T_guess, T_new, delta_T
-  real(real64) :: fval, dfdT
-  real(real64) :: f_tolerance
-  integer :: iter
+  call wet_bulb_temperature_checked(T_dry, RH, P, tolerance, A, max_iter, 0, T_wet, status)
+end subroutine wet_bulb_temperature
 
-  ! ---- configuration (residual tolerance in hPa) ----
-  ! Equation is in hPa because e_s returns hPa and P is passed in hPa.
-  ! 1e-6 hPa is quite strict; you can relax to 1e-4 if you want.
-  f_tolerance = 1.0e-6_real64
 
-  ! Initial guess
-  T_new   = T_dry
-  delta_T = huge(1.0_real64)
-  iter    = 0
+subroutine wet_bulb_temperature_checked(T_dry, RH, P, tolerance, A, max_iter, ice, T_wet, status)
+  use, intrinsic :: iso_fortran_env, only: real64
+  use, intrinsic :: ieee_arithmetic, only: ieee_is_finite, ieee_value, ieee_quiet_nan
+  implicit none
+  real(real64), intent(in) :: T_dry, RH, P, tolerance, A
+  integer, intent(in) :: max_iter, ice
+  real(real64), intent(out) :: T_wet
+  integer, intent(out) :: status
 
-  do while (iter < max_iter)
+  ! Status: 0 = converged, 1 = invalid input, 2 = ice solution above freezing,
+  ! 3 = non-convergence.
+  real(real64), parameter :: e_zero = 6.1078_real64 ! hPa, shared by both curves
+  real(real64), parameter :: water_b = 17.2693882_real64, water_c = 237.3_real64
+  ! WMO No. 8, Eq. (4.B.3)
+  real(real64), parameter :: ice_b = 22.46_real64, ice_c = 272.62_real64
+  real(real64) :: ap, e_air, e_wet, residual, residual_tolerance
+  real(real64) :: b, c, estimate, denominator, slope
+  integer :: iteration
 
-     T_guess = T_new
+  T_wet = ieee_value(0.0_real64, ieee_quiet_nan)
+  status = 1
+  ap = A * P
+  if (.not. ieee_is_finite(T_dry) .or. T_dry <= -water_c) return
+  if (.not. ieee_is_finite(RH) .or. RH < 0.0_real64 .or. RH > 100.0_real64) return
+  if (.not. ieee_is_finite(P) .or. P <= 0.0_real64) return
+  if (.not. ieee_is_finite(A) .or. A <= 0.0_real64) return
+  if (.not. ieee_is_finite(ap) .or. ap <= 0.0_real64) return
+  if (.not. ieee_is_finite(tolerance) .or. tolerance <= 0.0_real64 .or. max_iter <= 0) return
+  if (ice /= 0 .and. ice /= 1) return
 
-     fval = f(T_guess, T_dry, RH, P, A)
+  ! Ambient RH is relative to liquid water in both modes.
+  e_air = (RH / 100.0_real64) * saturation_pressure(T_dry, water_b, water_c)
+  if (ice == 1) then
+     b = ice_b
+     c = ice_c
+     estimate = 0.0_real64
+  else
+     b = water_b
+     c = water_c
+     estimate = T_dry
+  end if
 
-     ! Dual convergence: temperature step AND residual
-     if (abs(fval) <= f_tolerance .and. delta_T <= tolerance) exit
-
-     dfdT = df_dT(T_guess, T_dry, RH, P, A)
-
-     ! Derivative too small => avoid blow-up
-     if (abs(dfdT) < 1.0e-12_real64) exit
-
-     ! Newton update
-     T_new = T_guess - fval / dfdT
-
-     ! Physical constraint: wet-bulb temperature should not exceed dry-bulb
-     if (T_new > T_dry) T_new = T_dry
-
-     delta_T = abs(T_new - T_guess)
-     iter = iter + 1
+  ! The residual slope is at least A * P, so this also bounds temperature error.
+  residual_tolerance = min(1.0e-6_real64, tolerance * ap)
+  status = 3
+  do iteration = 0, max_iter
+     denominator = estimate + c
+     if (.not. ieee_is_finite(denominator) .or. denominator <= 0.0_real64) return
+     e_wet = saturation_pressure(estimate, b, c)
+     residual = e_wet - e_air + ap * (estimate - T_dry)
+     if (.not. ieee_is_finite(residual)) return
+     if (abs(residual) <= residual_tolerance) then
+        T_wet = estimate
+        status = 0
+        return
+     end if
+     if (ice == 1 .and. iteration == 0 .and. residual < 0.0_real64) then
+        status = 2
+        return
+     end if
+     if (iteration == max_iter) exit
+     slope = e_wet * b * (c / denominator) / denominator + ap
+     if (.not. ieee_is_finite(slope)) return
+     estimate = estimate - residual / slope
   end do
-
-  T_wet = T_new
 
 contains
 
-  ! Saturation vapor pressure (hPa)
-  real(real64) function e_s(T)
-    real(real64), intent(in) :: T
-    real(real64) :: t_k
-    real(real64), parameter :: a = 17.2693882_real64
-    real(real64), parameter :: b = 35.86_real64
-    real(real64), parameter :: t0 = 273.16_real64
-    t_k = T + t0
-    e_s = 6.1078_real64 * exp(a * (t_k - t0) / (t_k - b))
-  end function e_s
+  real(real64) function saturation_pressure(t, b, c)
+    real(real64), intent(in) :: t, b, c
+    saturation_pressure = e_zero * exp(b * (t / (t + c)))
+  end function saturation_pressure
 
-  ! Actual vapor pressure (hPa)
-  real(real64) function e_a(T_dry_in, RH_in)
-    real(real64), intent(in) :: T_dry_in, RH_in
-    e_a = (RH_in / 100.0_real64) * e_s(T_dry_in)
-  end function e_a
-
-  ! Nonlinear equation f(Tw)=0 in hPa
-  ! f = e_s(Tw) - e_a(Tdry,RH) - A*P*(Tdry-Tw)
-  real(real64) function f(T_w, T_dry_in, RH_in, P_in, A_in)
-    real(real64), intent(in) :: T_w, T_dry_in, RH_in, P_in, A_in
-    real(real64) :: e_w, e_d
-    e_w = e_s(T_w)
-    e_d = e_a(T_dry_in, RH_in)
-    f = e_w - e_d - (A_in * P_in * (T_dry_in - T_w))
-  end function f
-
-  ! Numerical derivative df/dT via central difference
-  real(real64) function df_dT(T_w, T_dry_in, RH_in, P_in, A_in)
-    real(real64), intent(in) :: T_w, T_dry_in, RH_in, P_in, A_in
-    real(real64), parameter :: dT = 1.0e-3_real64
-    df_dT = ( f(T_w + dT, T_dry_in, RH_in, P_in, A_in) - &
-              f(T_w - dT, T_dry_in, RH_in, P_in, A_in) ) / (2.0_real64 * dT)
-  end function df_dT
-
-end subroutine wet_bulb_temperature
+end subroutine wet_bulb_temperature_checked

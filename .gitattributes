@@ -1,0 +1,2 @@
+scripts/topbuild_manywheel_linux_gfortran.sh text eol=lf
+scripts/topbuild_manywheel_macos.sh text eol=lf

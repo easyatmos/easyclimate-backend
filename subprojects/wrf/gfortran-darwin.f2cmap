@@ -1,0 +1,2 @@
+# GNU OpenMP lock kinds on macOS arm64.
+dict(integer=dict(fomp_lock_kind='long_long', fomp_nest_lock_kind='long_long'))

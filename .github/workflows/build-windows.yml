@@ -1,0 +1,70 @@
+name: Build ifx wheels (Windows)
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+  workflow_dispatch:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-2022
+    env:
+      ONEAPI_INSTALLER_URL: https://registrationcenter-download.intel.com/akdlm/IRC_NAS/728c4418-1b40-47a9-ad51-31530fb27c94/intel-oneapi-toolkit-2026.2.0.661_offline.exe
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Enable MSVC
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+          vsversion: "2022"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+
+      - name: Cache the oneAPI installer
+        uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/intel-oneapi-toolkit-2026.2.0.661_offline.exe
+          key: oneapi-windows-x64-2026.2.0.661-offline
+
+      - name: Install Intel oneAPI Fortran
+        shell: pwsh
+        run: |
+          $installer = Join-Path $env:RUNNER_TEMP 'intel-oneapi-toolkit-2026.2.0.661_offline.exe'
+          if (-not (Test-Path -LiteralPath $installer)) {
+            curl.exe --fail --location --retry 3 --output $installer $env:ONEAPI_INSTALLER_URL
+            if ($LASTEXITCODE -ne 0) {
+              throw "oneAPI installer download failed with exit code $LASTEXITCODE"
+            }
+          }
+          $arguments = @(
+              '-s', '-a', '--silent', '--eula', 'accept',
+              '-p=NEED_VS2022_INTEGRATION=0',
+              '--components', 'intel.oneapi.win.ifort-compiler'
+          )
+          $process = Start-Process -FilePath $installer -ArgumentList $arguments -WindowStyle Hidden -Wait -PassThru
+          if ($process.ExitCode -ne 0) {
+            throw "oneAPI installation failed with exit code $($process.ExitCode)"
+          }
+
+      - name: Build wheels
+        shell: cmd
+        run: |
+          call "%ProgramFiles(x86)%\Intel\oneAPI\setvars.bat" intel64 vs2022
+          if errorlevel 1 exit /b 1
+          pwsh -NoProfile -File scripts\topbuild_manywheel_windows_uv.ps1
+
+      - name: Upload wheels
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-windows
+          path: dist/*.whl
+          if-no-files-found: error
+          retention-days: 14

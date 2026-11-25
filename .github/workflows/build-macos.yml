@@ -1,0 +1,49 @@
+name: Build gfortran wheels (macOS)
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+  workflow_dispatch:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: macos-15
+    env:
+      PYTHON_VERSIONS: |-
+        3.10
+        3.11
+        3.12
+        3.13
+        3.14
+        3.15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ env.PYTHON_VERSIONS }}
+          architecture: arm64
+
+      - name: Install GNU compilers
+        run: brew install gcc
+
+      - name: Build wheels
+        shell: bash
+        run: |
+          while IFS= read -r version; do
+            printf 'Building macOS arm64 wheel for Python %s\n' "$version"
+            PYTHON="python$version" bash scripts/topbuild_manywheel_macos.sh
+          done <<< "$PYTHON_VERSIONS"
+
+      - name: Upload wheels
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-macos-arm64
+          path: dist/macos-arm64/*.whl
+          if-no-files-found: error
+          retention-days: 14

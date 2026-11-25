@@ -1,5 +1,6 @@
-from __future__ import (absolute_import, division, print_function)
+from __future__ import absolute_import, division, print_function
 import os
+
 # import pkg_resources
 
 
@@ -65,9 +66,10 @@ try:
     from .api import *
 except ImportError:
     import sys
+
     sys.path.append(os.getcwd())
     from . import api
-    from .api import *   
+    from .api import *
 
     # # For gfortran+msvc combination, extra shared libraries may exist
     # # (stored by numpy.distutils)

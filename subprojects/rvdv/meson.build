@@ -11,17 +11,14 @@ py_mod = import('python')
 py = py_mod.find_installation(pure: false)
 py_dep = py.dependency()
 
-#  Intel Short Vector Math Library (SVML)
-is_windows = build_machine.system() == 'windows'
-is_macos = build_machine.system() == 'darwin'
-
-if is_windows
-  svml_lib = meson.get_compiler('c').find_library('svml_dispmd')
-elif is_macos
-  svml_lib = declare_dependency()
-else
-  svml_path = '/opt/intel/oneapi/compiler/latest/lib'
-  svml_lib = meson.get_compiler('c').find_library('svml', dirs: svml_path)
+extension_deps = [py_dep]
+if meson.get_compiler('fortran').get_id() != 'gcc'
+  cc = meson.get_compiler('c')
+  if build_machine.system() == 'windows'
+    extension_deps += [cc.find_library('svml_dispmd')]
+  else
+    extension_deps += [cc.find_library('svml', dirs: '/opt/intel/oneapi/compiler/latest/lib')]
+  endif
 endif
 
 incdir_numpy = run_command(py,
@@ -54,7 +51,7 @@ py.extension_module('_rvdv',
   srcs_local + spherepack_source,
   incdir_f2py / 'fortranobject.c',
   include_directories: inc_np,
-  dependencies : [py_dep, svml_lib],
+  dependencies : extension_deps,
   install : true,
   install_dir: py.get_install_dir() / 'easyclimate_backend' / 'rvdv'
 )

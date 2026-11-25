@@ -124,7 +124,7 @@ Execute the following script to build the wheel package:
 
 .. code-block:: bash
 
-    cd /home/shenyulu/easyclimate-backend # Replace with your project path
+    cd /path/to/easyclimate-backend # Replace with your project path
     ./scripts/build_wheel_linux.sh
 
 Additional Notes

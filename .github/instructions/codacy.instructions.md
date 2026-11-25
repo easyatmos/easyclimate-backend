@@ -9,7 +9,7 @@ Configuration for AI behavior when interacting with Codacy's MCP Server
 ## using any tool that accepts the arguments: `provider`, `organization`, or `repository`
 - ALWAYS use:
  - provider: gh
- - organization: shenyulu
+ - organization: easyatmos
  - repository: easyclimate-backend
 - Avoid calling `git remote -v` unless really necessary
 

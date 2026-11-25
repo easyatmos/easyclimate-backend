@@ -25,8 +25,7 @@ inc_np = include_directories(incdir_numpy, incdir_f2py)
 
 lib = static_library('lib_ecl_redfit_x', [
                 'src/nrtype.f90', 'src/nrutil.f90', 'src/mutil.f90',
-                'src/nr.f90', 'src/ran.f90', 'src/ran1.f', 'src/gasdev.f'],
-                fortran_args: host_machine.system() == 'darwin' ? ['-fdec'] : [])
+                'src/nr.f90', 'src/ran.f90', 'src/ran1.f', 'src/gasdev.f'])
 
 # Fortran source files
 srcs_ecl_redfit_x =  ['redfit_x.f90',
@@ -41,12 +40,18 @@ redfit_source = custom_target('_ecl_redfit_xmodule.c',
   command : [py, '-m', 'numpy.f2py', '@INPUT@', '--lower', '--build-dir', 'subprojects/redfit_x']
 )
 
+# The legacy output files use OPEN(..., CARRIAGECONTROL=...).
+fortran_args = []
+if meson.get_compiler('fortran').get_id() == 'gcc'
+  fortran_args += ['-fdec']
+endif
+
 py.extension_module('_ecl_redfit_x',
   srcs_ecl_redfit_x + redfit_source,
   incdir_f2py / 'fortranobject.c',
   include_directories: inc_np,
+  fortran_args: fortran_args,
   link_with: lib,
-  fortran_args: host_machine.system() == 'darwin' ? ['-fdec'] : [],
   dependencies : py_dep,
   install : true,
   install_dir: py.get_install_dir() / 'easyclimate_backend' / 'redfit'
